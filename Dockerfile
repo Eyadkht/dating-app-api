@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the binary.
-RUN CGO_ENABLED=0 go build -o muzz-dating .
+RUN CGO_ENABLED=0 go build -o muzz-dating ./cmd/server
 
 FROM alpine:latest
 
