@@ -9,6 +9,7 @@ import (
 	"muzz-dating/pkg/models"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -122,11 +123,19 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a response object with a "token" key
+	var generatedToken, err = createToken(&user)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		errorResponse := map[string]string{"error": fmt.Sprintf("Error generating user Token: %v", err)}
+		json.NewEncoder(w).Encode(errorResponse)
+		return
+	}
+
 	encoder := json.NewEncoder(w)
 	response := struct {
 		Token string `json:"token"`
 	}{
-		Token: "test_token",
+		Token: generatedToken,
 	}
 
 	if err := encoder.Encode(response); err != nil {
@@ -135,4 +144,27 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(errorResponse)
 		return
 	}
+}
+
+func createToken(user *models.User) (string, error) {
+
+	generatedToken, err := generateTokenValue()
+	if err != nil {
+		return "", err
+	}
+
+	token := models.Token{
+		Value: generatedToken,
+	}
+
+	if err := core.GetDb().Model(&user).Association("Token").Replace(&token); err != nil {
+		return "", err
+	}
+
+	return generatedToken, nil
+}
+
+func generateTokenValue() (string, error) {
+
+	return uuid.New().String(), nil
 }

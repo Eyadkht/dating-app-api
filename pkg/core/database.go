@@ -29,6 +29,7 @@ func InitDb() {
 
 	// Migrate models to the Database
 	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.Token{})
 }
 
 func GetDb() *gorm.DB {
