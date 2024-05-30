@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"log"
+	"muzz-dating/pkg/models"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -25,6 +26,9 @@ func InitDb() {
 	if database_error != nil {
 		log.Fatal("Failed to connect to the database:", database_error)
 	}
+
+	// Migrate models to the Database
+	db.AutoMigrate(&models.User{})
 }
 
 func GetDb() *gorm.DB {

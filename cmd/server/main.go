@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+
 	// Load Environment variables
 	core.LoadConfig()
 
