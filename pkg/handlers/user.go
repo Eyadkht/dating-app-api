@@ -24,6 +24,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	var newUser models.User
 	decoder := json.NewDecoder(r.Body)
+	// TODO: Add field validation
 	if err := decoder.Decode(&newUser); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		error_response := map[string]string{"error": fmt.Sprintf("Error decoding request body: %v", err)}
