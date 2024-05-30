@@ -4,9 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"muzz-dating/pkg/core"
 )
 
 func main() {
+
+	//Initiate Db Connection
+	fmt.Println("Establishing Database connection")
+	core.InitDb()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

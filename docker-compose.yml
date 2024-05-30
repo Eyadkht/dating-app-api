@@ -14,5 +14,7 @@ services:
       context: .
     ports:
       - "8888:8888"
+    depends_on:
+      - db
 volumes:
   db_data: # Persist database data volume
