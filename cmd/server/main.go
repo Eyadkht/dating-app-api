@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"muzz-dating/pkg/core"
+	"muzz-dating/pkg/routes"
 )
 
 func main() {
@@ -13,19 +13,18 @@ func main() {
 	// Load Environment variables
 	core.LoadConfig()
 
-	//Initiate Db Connection
+	// Initiate Db Connection
 	fmt.Println("Establishing Database connection")
 	core.InitDb()
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		response := map[string]string{"message": "Hello World!"}
-		json.NewEncoder(w).Encode(response)
-	})
+	// Initiate Routers
+	fmt.Println("Registering Routes")
+	mux := http.NewServeMux()
+	routes.RegisterUserRoutes(mux)
 
-	//Run Server
+	// Run Server
 	fmt.Println("Server is running on port 8888")
-	err := http.ListenAndServe(":8888", nil)
+	err := http.ListenAndServe(":8888", mux)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}
