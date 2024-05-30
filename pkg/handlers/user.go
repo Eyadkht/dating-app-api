@@ -12,9 +12,9 @@ import (
 )
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 
 	// Only allow HTTP POST Method
+	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		error_response := map[string]string{"error": fmt.Sprintf("Method not allowed: %s", r.Method)}
@@ -56,6 +56,33 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 	if err := encoder.Encode(newUser); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		error_response := map[string]string{"error": fmt.Sprintf("Error serializing user to JSON: %v", err)}
+		json.NewEncoder(w).Encode(error_response)
+		return
+	}
+}
+
+func UserLogin(w http.ResponseWriter, r *http.Request) {
+
+	// Only allow HTTP POST Method
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		error_response := map[string]string{"error": fmt.Sprintf("Method not allowed: %s", r.Method)}
+		json.NewEncoder(w).Encode(error_response)
+		return
+	}
+
+	// Create a response object with a "token" key
+	encoder := json.NewEncoder(w)
+	response := struct {
+		Token string `json:"token"`
+	}{
+		Token: "test_token",
+	}
+
+	if err := encoder.Encode(response); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		error_response := map[string]string{"error": fmt.Sprintf("Error serializing user to JSON: %v", err)}
 		json.NewEncoder(w).Encode(error_response)
 		return

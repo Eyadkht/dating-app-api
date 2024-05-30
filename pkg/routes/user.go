@@ -6,5 +6,6 @@ import (
 )
 
 func RegisterUserRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/login", handlers.UserLogin)
 	mux.HandleFunc("/user/create", handlers.CreateUser)
 }
