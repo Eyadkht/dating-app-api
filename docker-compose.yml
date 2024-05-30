@@ -12,6 +12,10 @@ services:
   api:
     build:
       context: .
+    environment:
+      MYSQL_USER: muzz_db_user
+      MYSQL_PASSWORD: muzz_db_password
+      MYSQL_DATABASE: muzz_dating_db
     ports:
       - "8888:8888"
     depends_on:

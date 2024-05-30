@@ -9,6 +9,8 @@ import (
 )
 
 func main() {
+	// Load Environment variables
+	core.LoadConfig()
 
 	//Initiate Db Connection
 	fmt.Println("Establishing Database connection")
