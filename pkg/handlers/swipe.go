@@ -27,12 +27,11 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 	contextUser, ok := r.Context().Value(core.UserContextKey).(models.User)
 	if !ok {
 		// Handle the case where user is not found in context (unexpected)
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusNotFound)
 		error_response := map[string]string{"error": "Error: User not found in context"}
 		json.NewEncoder(w).Encode(error_response)
 		return
 	}
-	fmt.Println(contextUser.ID)
 
 	// Only allow HTTP POST Method
 	if r.Method != http.MethodPost {
@@ -42,17 +41,62 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	encoder := json.NewEncoder(w)
-
-	// Used as a data transfer object to omit the Token field
-	createdUserResponse := UserSwipeMatchedResonse{
-		Matched: false,
-		MatchID: 2,
+	var swipePayload struct {
+		TargetID  uint64 `json:"targetID"`
+		SwipeType string `json:"swipeType"`
 	}
+
+	err := json.NewDecoder(r.Body).Decode(&swipePayload)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		error_response := map[string]string{"error": "Error: Payload is not valid"}
+		json.NewEncoder(w).Encode(error_response)
+		return
+	}
+
+	swipe := models.Swipe{
+		SwiperID:  contextUser.ID,
+		TargetID:  swipePayload.TargetID,
+		SwipeType: swipePayload.SwipeType,
+	}
+
+	core.GetDb().Create(&swipe)
+	if swipe.SwipeType == "YES" {
+
+		var targetSwipe models.Swipe
+		err := core.GetDb().Where("swiper_id = ? AND target_id = ? AND swipe_type = ?", swipe.TargetID, swipe.SwiperID, "YES").First(&targetSwipe).Error
+
+		// If both users swipped YES on each other
+		if err == nil {
+			match := models.Match{
+				User1ID: swipe.SwiperID,
+				User2ID: swipe.TargetID,
+			}
+			core.GetDb().Create(&match)
+			encoder := json.NewEncoder(w)
+			createdUserResponse := UserSwipeMatchedResonse{
+				Matched: true,
+				MatchID: match.ID,
+			}
+
+			if err := encoder.Encode(createdUserResponse); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				errorResponse := map[string]string{"error": fmt.Sprintf("Error serializing UserSwipeMatchedResonse to JSON: %v", err)}
+				json.NewEncoder(w).Encode(errorResponse)
+				return
+			}
+			return
+		}
+	}
+
+	encoder := json.NewEncoder(w)
+	createdUserResponse := UserSwipeNotMatchedResonse{
+		Matched: false,
+	}
+
 	if err := encoder.Encode(createdUserResponse); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		errorResponse := map[string]string{"error": fmt.Sprintf("Error serializing user to JSON: %v", err)}
+		errorResponse := map[string]string{"error": fmt.Sprintf("Error serializing UserSwipeNotMatchedResonse to JSON: %v", err)}
 		json.NewEncoder(w).Encode(errorResponse)
 		return
 	}

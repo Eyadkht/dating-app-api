@@ -172,15 +172,37 @@ func createToken(user *models.User) (string, error) {
 		return "", err
 	}
 
-	token := models.Token{
-		Value: generatedToken,
+	userFetchErr := core.GetDb().Preload("Token").First(&user).Error
+	if userFetchErr != nil {
+		return "", userFetchErr
 	}
 
-	if err := core.GetDb().Model(&user).Association("Token").Replace(&token); err != nil {
-		return "", err
+	// Check if the user already has a token
+	if user.Token.ID != 0 {
+		// Update the existing token value
+		user.Token.Value = generatedToken
+		err = core.GetDb().Save(&user.Token).Error
+		if err != nil {
+			return "", err
+		}
+		return generatedToken, nil
+	} else {
+		// Generate a new token for the user
+		token := models.Token{
+			Value:  generatedToken,
+			UserID: user.ID,
+		}
+
+		// Attach the token to the user
+		user.Token = token
+		err = core.GetDb().Save(&user).Error
+		if err != nil {
+			return "", err
+		}
+
+		return generatedToken, nil
 	}
 
-	return generatedToken, nil
 }
 
 func generateTokenValue() (string, error) {
