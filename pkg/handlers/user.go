@@ -14,6 +14,15 @@ import (
 	"gorm.io/gorm"
 )
 
+type CreateUserResonse struct {
+	ID       uint64 `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Name     string `json:"name"`
+	Gender   string `json:"gender"`
+	Age      int    `json:"age"`
+}
+
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	// Only allow HTTP POST Method
@@ -67,12 +76,26 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
-	if err := encoder.Encode(newUser); err != nil {
+
+	// Used as a data transfer object to omit the Token field
+	createdUserResponse := CreateUserResonse{
+		ID:       newUser.ID,
+		Email:    newUser.Email,
+		Password: newUser.Password,
+		Name:     newUser.Name,
+		Gender:   newUser.Gender,
+		Age:      newUser.Age,
+	}
+	if err := encoder.Encode(createdUserResponse); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		errorResponse := map[string]string{"error": fmt.Sprintf("Error serializing user to JSON: %v", err)}
 		json.NewEncoder(w).Encode(errorResponse)
 		return
 	}
+}
+
+type UserLoginResonse struct {
+	Token string `json:"token"`
 }
 
 func UserLogin(w http.ResponseWriter, r *http.Request) {
@@ -132,13 +155,9 @@ func UserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encoder := json.NewEncoder(w)
-	response := struct {
-		Token string `json:"token"`
-	}{
-		Token: generatedToken,
-	}
+	userLoginResponse := UserLoginResonse{Token: generatedToken}
 
-	if err := encoder.Encode(response); err != nil {
+	if err := encoder.Encode(userLoginResponse); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		errorResponse := map[string]string{"error": fmt.Sprintf("Error serializing user to JSON: %v", err)}
 		json.NewEncoder(w).Encode(errorResponse)

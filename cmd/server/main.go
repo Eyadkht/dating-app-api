@@ -21,6 +21,7 @@ func main() {
 	fmt.Println("Registering Routes")
 	mux := http.NewServeMux()
 	routes.RegisterUserRoutes(mux)
+	routes.RegisterDiscoverRoutes(mux)
 
 	// Run Server
 	fmt.Println("Server is running on port 8888")
