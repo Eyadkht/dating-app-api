@@ -28,7 +28,7 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		// Handle the case where user is not found in context (unexpected)
 		w.WriteHeader(http.StatusNotFound)
-		error_response := map[string]string{"error": "Error: User not found in context"}
+		error_response := map[string]string{"error": "User not found in context"}
 		json.NewEncoder(w).Encode(error_response)
 		return
 	}
@@ -49,7 +49,25 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&swipePayload)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		error_response := map[string]string{"error": "Error: Payload is not valid"}
+		error_response := map[string]string{"error": "Payload is not valid"}
+		json.NewEncoder(w).Encode(error_response)
+		return
+	}
+
+	// Check if the tragetID is the same as swiperID
+	if swipePayload.TargetID == contextUser.ID {
+		w.WriteHeader(http.StatusBadRequest)
+		error_response := map[string]string{"error": "Cannot swipe on yourself"}
+		json.NewEncoder(w).Encode(error_response)
+		return
+	}
+
+	// Check if the tragetID user exists
+	var targetUser models.User
+	err = core.GetDb().First(&targetUser, swipePayload.TargetID).Error
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		error_response := map[string]string{"error": "Target user not found"}
 		json.NewEncoder(w).Encode(error_response)
 		return
 	}
