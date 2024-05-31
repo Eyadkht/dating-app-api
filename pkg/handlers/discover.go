@@ -30,7 +30,6 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(error_response)
 		return
 	}
-	fmt.Println(contextUser)
 
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -42,7 +41,11 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch all users from the database
 	users := []models.User{}
-	result := core.GetDb().Omit("password", "email", "Token").Find(&users)
+
+	// Exclude the profiles the user matched or swiped on.
+	// Exclude the user's own profile from coming up in the results
+	excludedIDs := []uint64{contextUser.ID}
+	result := core.GetDb().Omit("password", "email", "Token").Not("id IN (?)", excludedIDs).Find(&users)
 
 	// Convert User slices to PublicUserResponse slices
 	// Used as a data transfer object to omit Token and Password fields

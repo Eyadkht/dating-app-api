@@ -36,8 +36,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 		token := parts[1]
 
-		// Validate the token (replace with your token validation logic)
-		// This example is a placeholder, you'll need to implement actual validation
+		// Validate the token
 		isValid, user, err := validateToken(token)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
