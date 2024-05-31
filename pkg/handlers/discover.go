@@ -4,16 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 
 	"muzz-dating/pkg/core"
 	"muzz-dating/pkg/models"
+	"muzz-dating/pkg/utils"
 )
 
 type PotentialMatchesResponse struct {
-	ID     uint64 `json:"id"`
-	Name   string `json:"name"`
-	Gender string `json:"gender"`
-	Age    int    `json:"age"`
+	ID             uint64  `json:"id"`
+	Name           string  `json:"name"`
+	Gender         string  `json:"gender"`
+	Age            int     `json:"age"`
+	DistanceFromMe float64 `json:"distanceFromMe"`
 }
 
 func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
@@ -70,17 +73,25 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 	// Execute the query
 	result := query.Find(&users)
 
-	// Convert User slices to PublicUserResponse slices
+	// Convert User slices to PotentialMatchesResponse slices
 	// Used as a data transfer object to omit Token and Password fields
 	potentialMatches := make([]PotentialMatchesResponse, len(users))
 	for i, user := range users {
+		// Calculate distance for each user and add to the result
+		var DistanceFromMe float64 = utils.CalculateDistance(contextUser.Latitude, contextUser.Longitude, user.Latitude, user.Longitude)
 		potentialMatches[i] = PotentialMatchesResponse{
-			ID:     user.ID,
-			Name:   user.Name,
-			Gender: user.Gender,
-			Age:    user.Age,
+			ID:             user.ID,
+			Name:           user.Name,
+			Gender:         user.Gender,
+			Age:            user.Age,
+			DistanceFromMe: DistanceFromMe,
 		}
 	}
+
+	// Sort users by distance
+	sort.Slice(potentialMatches, func(i, j int) bool {
+		return potentialMatches[i].DistanceFromMe < potentialMatches[j].DistanceFromMe
+	})
 
 	if err := result.Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

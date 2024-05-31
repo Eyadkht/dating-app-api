@@ -7,6 +7,7 @@ import (
 
 	"muzz-dating/pkg/core"
 	"muzz-dating/pkg/models"
+	"muzz-dating/pkg/utils"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
@@ -53,6 +54,12 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	newUser.Password = string(hashedPassword)
+
+	// Ideally this will be recieved from the frontend client
+	// generating random values for simplicity
+	latitude, longitude := utils.GenerateRandomLatLong()
+	newUser.Latitude = latitude
+	newUser.Longitude = longitude
 
 	result := core.GetDb().Create(&newUser)
 	if err := result.Error; err != nil {

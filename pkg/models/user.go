@@ -5,13 +5,15 @@ import (
 )
 
 type User struct {
-	ID       uint64 `gorm:"primaryKey;autoIncrement" json:"id" `
-	Email    string `gorm:"unique" json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
-	Gender   string `json:"gender"`
-	Age      int    `json:"age"`
-	Token    Token  `gorm:"constraint:OnDelete:CASCADE;"`
+	ID        uint64  `gorm:"primaryKey;autoIncrement" json:"id" `
+	Email     string  `gorm:"unique" json:"email"`
+	Password  string  `json:"password"`
+	Name      string  `json:"name"`
+	Gender    string  `json:"gender"`
+	Age       int     `json:"age"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Token     Token   `gorm:"constraint:OnDelete:CASCADE;"`
 }
 
 type Token struct {
