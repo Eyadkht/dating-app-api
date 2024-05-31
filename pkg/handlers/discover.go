@@ -45,6 +45,8 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 	// Exclude the profiles the user matched or swiped on.
 	// Exclude the user's own profile from coming up in the results
 	excludedIDs := []uint64{contextUser.ID}
+	swipedUserIDs := getSwipedUserIDs(contextUser.ID)
+	excludedIDs = append(excludedIDs, swipedUserIDs...)
 	result := core.GetDb().Omit("password", "email", "Token").Not("id IN (?)", excludedIDs).Find(&users)
 
 	// Convert User slices to PublicUserResponse slices
@@ -80,4 +82,16 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(error_response)
 		return
 	}
+}
+
+func getSwipedUserIDs(userID uint64) []uint64 {
+	var swipes []models.Swipe
+	core.GetDb().Where("swiper_id = ?", userID).Find(&swipes)
+
+	swipedUserIDs := make([]uint64, 0, len(swipes))
+	for _, swipe := range swipes {
+		swipedUserIDs = append(swipedUserIDs, swipe.TargetID)
+	}
+
+	return swipedUserIDs
 }
