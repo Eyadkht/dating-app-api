@@ -1,10 +1,13 @@
 package routes
 
 import (
-	"muzz-dating/pkg/handlers"
 	"net/http"
+
+	"muzz-dating/pkg/core"
+	"muzz-dating/pkg/handlers"
 )
 
 func RegisterDiscoverRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/discover", handlers.GetPotentialMatches)
+
+	mux.HandleFunc("/discover", core.AuthMiddleware(handlers.GetPotentialMatches))
 }

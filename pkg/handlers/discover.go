@@ -17,9 +17,26 @@ type PotentialMatchesResponse struct {
 }
 
 func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
+
+	// Set content-type to json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Retrieve user from context
+	contextUser, ok := r.Context().Value(core.UserContextKey).(models.User)
+	if !ok {
+		// Handle the case where user is not found in context (unexpected)
+		w.WriteHeader(http.StatusInternalServerError)
+		error_response := map[string]string{"error": "Error: User not found in context"}
+		json.NewEncoder(w).Encode(error_response)
+		return
+	}
+	fmt.Println(contextUser)
+
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		fmt.Fprintf(w, "Method not allowed: %s", r.Method)
+		error_response := map[string]string{"error": fmt.Sprintf("Method not allowed: %s", r.Method)}
+		json.NewEncoder(w).Encode(error_response)
 		return
 	}
 
@@ -41,11 +58,11 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 
 	if err := result.Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error fetching users: %v", err)
+		error_response := map[string]string{"error": "Error fetching users"}
+		json.NewEncoder(w).Encode(error_response)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 
 	// Create a response object with a "results" key
@@ -56,7 +73,8 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := encoder.Encode(response); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "Error marshalling users to JSON: %v", err)
+		error_response := map[string]string{"error": fmt.Sprintf("Error serializing users to JSON: %v", err)}
+		json.NewEncoder(w).Encode(error_response)
 		return
 	}
 }
