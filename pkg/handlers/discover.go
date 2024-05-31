@@ -39,6 +39,11 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get the query parameters
+	minAge := r.URL.Query().Get("minAge")
+	maxAge := r.URL.Query().Get("maxAge")
+	gender := r.URL.Query().Get("gender")
+
 	// Fetch all users from the database
 	users := []models.User{}
 
@@ -47,7 +52,23 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 	excludedIDs := []uint64{contextUser.ID}
 	swipedUserIDs := getSwipedUserIDs(contextUser.ID)
 	excludedIDs = append(excludedIDs, swipedUserIDs...)
-	result := core.GetDb().Omit("password", "email", "Token").Not("id IN (?)", excludedIDs).Find(&users)
+	query := core.GetDb().Omit("password", "email", "Token").Not("id IN (?)", excludedIDs)
+
+	// Apply filters
+	if minAge != "" {
+		query = query.Where("age >= ?", minAge)
+	}
+
+	if maxAge != "" {
+		query = query.Where("age <= ?", maxAge)
+	}
+
+	if gender != "" {
+		query = query.Where("gender = ?", gender)
+	}
+
+	// Execute the query
+	result := query.Find(&users)
 
 	// Convert User slices to PublicUserResponse slices
 	// Used as a data transfer object to omit Token and Password fields
