@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 
 	"muzz-dating/pkg/core"
@@ -81,6 +82,13 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 	core.GetDb().Create(&swipe)
 	if swipe.SwipeType == "YES" {
 
+		// Increase the Target User Total Likes
+		targetUser.TotalLikesReceived++
+		targetUser.AttractivenessScore = calculateAttractivenessScore(targetUser.TotalLikesReceived, targetUser.TotalDislikesReceived)
+
+		// Save the changes to the target user
+		core.GetDb().Save(&targetUser)
+
 		var targetSwipe models.Swipe
 		err := core.GetDb().Where("swiper_id = ? AND target_id = ? AND swipe_type = ?", swipe.TargetID, swipe.SwiperID, "YES").First(&targetSwipe).Error
 
@@ -105,6 +113,12 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
+	} else {
+		// Increase the Target User Total Dislikes
+		targetUser.TotalDislikesReceived++
+		targetUser.AttractivenessScore = calculateAttractivenessScore(targetUser.TotalLikesReceived, targetUser.TotalDislikesReceived)
+		// Save the changes to the target user
+		core.GetDb().Save(&targetUser)
 	}
 
 	encoder := json.NewEncoder(w)
@@ -118,4 +132,15 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(errorResponse)
 		return
 	}
+}
+
+func calculateAttractivenessScore(likes, dislikes int) float64 {
+	totalSwipes := likes + dislikes
+	if totalSwipes == 0 {
+		return 0.0
+	}
+	score := float64(likes) / float64(totalSwipes)
+
+	// Round to the nearest 2 digits
+	return math.Round(score*100) / 100
 }
