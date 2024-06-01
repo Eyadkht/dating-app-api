@@ -64,7 +64,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			// Handle other potential errors
-			utils.WriteErrorResponse(w, utils.NewAppError(http.StatusConflict, fmt.Sprintf("Error creating user: %v", err)))
+			utils.WriteErrorResponse(w, utils.NewAppError(http.StatusInternalServerError, fmt.Sprintf("Error creating user: %v", err)))
 			return
 		}
 	}
