@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type CreateUserResonse struct {
+type CreateUserResponse struct {
 	ID       uint64 `json:"id"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -70,7 +70,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Used as a data transfer object to omit the Token field
-	createdUserResponse := CreateUserResonse{
+	createdUserResponse := CreateUserResponse{
 		ID:       newUser.ID,
 		Email:    newUser.Email,
 		Password: newUser.Password,
