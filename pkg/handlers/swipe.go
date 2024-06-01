@@ -71,28 +71,32 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 	// Update the Target user attractiveness score
 	// Using Goroutines to run the function in the background as it's not critical to the response
 	go func(targetUser models.User, swipeType string) {
-		if err := updateTargetUserAttractivenessScore(targetUser, swipeType); err != nil {
+		if err := updateTargetUserAttractivenessScore(&targetUser, swipeType); err != nil {
 			fmt.Printf("Error updating target user Attractiveness score: %v\n", err)
 		}
 	}(targetUser, swipe.SwipeType)
 
 	if swipe.SwipeType == "YES" {
-		// Save the changes to the target user
-		core.GetDb().Save(&targetUser)
 
 		var targetSwipe models.Swipe
 		err := core.GetDb().Where("swiper_id = ? AND target_id = ? AND swipe_type = ?", swipe.TargetID, swipe.SwiperID, "YES").First(&targetSwipe).Error
 
 		// If both users swipped YES on each other
 		if err == nil {
-			match := models.Match{
-				User1ID: swipe.SwiperID,
-				User2ID: swipe.TargetID,
+			// Check if a match already exists between these users
+			if !checkIfMatchExists(swipe.SwiperID, swipe.TargetID) {
+				match := models.Match{
+					User1ID: swipe.SwiperID,
+					User2ID: swipe.TargetID,
+				}
+				core.GetDb().Create(&match)
+				userSwipeMatchedResonse := UserSwipeMatchedResonse{Matched: true, MatchID: match.ID}
+				utils.WriteSuccessResponse(w, http.StatusOK, userSwipeMatchedResonse)
+				return
+			} else {
+				utils.WriteErrorResponse(w, utils.NewAppError(http.StatusBadRequest, "Match already exists"))
+				return
 			}
-			core.GetDb().Create(&match)
-			userSwipeMatchedResonse := UserSwipeMatchedResonse{Matched: true, MatchID: match.ID}
-			utils.WriteSuccessResponse(w, http.StatusOK, userSwipeMatchedResonse)
-			return
 		}
 	}
 
@@ -101,7 +105,7 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 	utils.WriteSuccessResponse(w, http.StatusOK, createdUserResponse)
 }
 
-func updateTargetUserAttractivenessScore(targetUser models.User, swipeType string) error {
+func updateTargetUserAttractivenessScore(targetUser *models.User, swipeType string) error {
 
 	// Update the target user attractiveness score based on a simple formula
 	// Attractiveness Score = Total Likes / (Total Likes + Total Dislikes)
@@ -110,16 +114,18 @@ func updateTargetUserAttractivenessScore(targetUser models.User, swipeType strin
 	fmt.Println("Updating target user attractiveness score")
 	if swipeType == "YES" {
 		targetUser.TotalLikesReceived++
-		targetUser.AttractivenessScore = calculateAttractivenessScore(targetUser.TotalLikesReceived, targetUser.TotalDislikesReceived)
 	} else if swipeType == "NO" {
 		targetUser.TotalDislikesReceived++
-		targetUser.AttractivenessScore = calculateAttractivenessScore(targetUser.TotalLikesReceived, targetUser.TotalDislikesReceived)
 	}
 
+	// Calculate attractiveness score
+	targetUser.AttractivenessScore = calculateAttractivenessScore(targetUser.TotalLikesReceived, targetUser.TotalDislikesReceived)
+
 	// Save the changes to the target user
-	err := core.GetDb().Save(&targetUser)
+	err := core.GetDb().Save(&targetUser).Error
 	if err != nil {
-		return err.Error
+		fmt.Println("Error saving target user changes", err)
+		return err
 	}
 
 	return nil
@@ -135,4 +141,10 @@ func calculateAttractivenessScore(likes int, dislikes int) float64 {
 
 	// Round to the nearest 2 digits
 	return math.Round(score*100) / 100
+}
+
+func checkIfMatchExists(user1ID, user2ID uint64) bool {
+	var count int64
+	core.GetDb().Model(&models.Match{}).Where("(user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)", user1ID, user2ID, user2ID, user1ID).Count(&count)
+	return count > 0
 }
