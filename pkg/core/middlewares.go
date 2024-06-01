@@ -2,11 +2,11 @@ package core
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 
 	"muzz-dating/pkg/models"
+	"muzz-dating/pkg/utils"
 
 	"gorm.io/gorm"
 )
@@ -14,40 +14,32 @@ import (
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// Set content-type to json
-		w.Header().Set("Content-Type", "application/json")
-
 		// Extract Authorization header
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			// Missing token, return unauthorized
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Missing Authorization header"})
+			utils.WriteErrorResponse(w, utils.NewAppError(http.StatusUnauthorized, "Missing Authorization header"))
 			return
 		}
 
 		// Split the header to get the token (assuming format: "Token <token>")
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || parts[0] != "Token" {
-			// Invalid format, return unauthorized
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid Authorization header format"})
+			utils.WriteErrorResponse(w, utils.NewAppError(http.StatusUnauthorized, "Invalid Authorization header format"))
 			return
 		}
 		token := parts[1]
 
-		// Validate the token
+		// Validate the token and bring the user object and
+		// inject it into the request context so it can be used inside the protected handler
 		isValid, user, err := validateToken(token)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Error validating token"})
+			utils.WriteErrorResponse(w, utils.NewAppError(http.StatusInternalServerError, "Error validating token"))
 			return
 		}
 
 		if !isValid {
 			// Invalid token, return unauthorized
-			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid token"})
+			utils.WriteErrorResponse(w, utils.NewAppError(http.StatusUnauthorized, "Invalid token"))
 			return
 		}
 
