@@ -64,7 +64,7 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 	// Execute the query
 	result := query.Find(&users)
 	if err := result.Error; err != nil {
-		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusBadRequest, "Error fetching users"))
+		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusInternalServerError, "Error fetching users"))
 		return
 	}
 
