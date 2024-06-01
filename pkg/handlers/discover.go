@@ -25,7 +25,7 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Retrieve user from context
-	// The AuthMiddleware is handling cases related to not finding the user
+	// The AuthMiddleware is handling errors related to not finding the user
 	contextUser, _ := r.Context().Value(core.UserContextKey).(models.User)
 
 	if r.Method != http.MethodGet {

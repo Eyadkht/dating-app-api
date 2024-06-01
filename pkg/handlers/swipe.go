@@ -8,6 +8,7 @@ import (
 
 	"muzz-dating/pkg/core"
 	"muzz-dating/pkg/models"
+	"muzz-dating/pkg/utils"
 )
 
 type UserSwipeMatchedResonse struct {
@@ -21,24 +22,13 @@ type UserSwipeNotMatchedResonse struct {
 
 func UserSwipe(w http.ResponseWriter, r *http.Request) {
 
-	// Set content-type to json
-	w.Header().Set("Content-Type", "application/json")
-
 	// Retrieve user from context
-	contextUser, ok := r.Context().Value(core.UserContextKey).(models.User)
-	if !ok {
-		// Handle the case where user is not found in context (unexpected)
-		w.WriteHeader(http.StatusNotFound)
-		error_response := map[string]string{"error": "User not found in context"}
-		json.NewEncoder(w).Encode(error_response)
-		return
-	}
+	// The AuthMiddleware is handling errors related to not finding the user
+	contextUser, _ := r.Context().Value(core.UserContextKey).(models.User)
 
 	// Only allow HTTP POST Method
 	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		errorResponse := map[string]string{"error": fmt.Sprintf("Method not allowed: %s", r.Method)}
-		json.NewEncoder(w).Encode(errorResponse)
+		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusMethodNotAllowed, fmt.Sprintf("Method not allowed: %s", r.Method)))
 		return
 	}
 
@@ -49,17 +39,13 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&swipePayload)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		error_response := map[string]string{"error": "Payload is not valid"}
-		json.NewEncoder(w).Encode(error_response)
+		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusBadRequest, "Payload is not valid"))
 		return
 	}
 
 	// Check if the tragetID is the same as swiperID
 	if swipePayload.TargetID == contextUser.ID {
-		w.WriteHeader(http.StatusBadRequest)
-		error_response := map[string]string{"error": "Cannot swipe on yourself"}
-		json.NewEncoder(w).Encode(error_response)
+		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusBadRequest, "Cannot swipe on yourself"))
 		return
 	}
 
@@ -67,9 +53,7 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 	var targetUser models.User
 	err = core.GetDb().First(&targetUser, swipePayload.TargetID).Error
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		error_response := map[string]string{"error": "Target user not found"}
-		json.NewEncoder(w).Encode(error_response)
+		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusNotFound, "Target user not found"))
 		return
 	}
 
@@ -99,18 +83,8 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 				User2ID: swipe.TargetID,
 			}
 			core.GetDb().Create(&match)
-			encoder := json.NewEncoder(w)
-			createdUserResponse := UserSwipeMatchedResonse{
-				Matched: true,
-				MatchID: match.ID,
-			}
-
-			if err := encoder.Encode(createdUserResponse); err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				errorResponse := map[string]string{"error": fmt.Sprintf("Error serializing UserSwipeMatchedResonse to JSON: %v", err)}
-				json.NewEncoder(w).Encode(errorResponse)
-				return
-			}
+			userSwipeMatchedResonse := UserSwipeMatchedResonse{Matched: true, MatchID: match.ID}
+			utils.WriteSuccessResponse(w, http.StatusOK, userSwipeMatchedResonse)
 			return
 		}
 	} else {
@@ -121,17 +95,8 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 		core.GetDb().Save(&targetUser)
 	}
 
-	encoder := json.NewEncoder(w)
-	createdUserResponse := UserSwipeNotMatchedResonse{
-		Matched: false,
-	}
-
-	if err := encoder.Encode(createdUserResponse); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		errorResponse := map[string]string{"error": fmt.Sprintf("Error serializing UserSwipeNotMatchedResonse to JSON: %v", err)}
-		json.NewEncoder(w).Encode(errorResponse)
-		return
-	}
+	createdUserResponse := UserSwipeNotMatchedResonse{Matched: false}
+	utils.WriteSuccessResponse(w, http.StatusOK, createdUserResponse)
 }
 
 func calculateAttractivenessScore(likes, dislikes int) float64 {
