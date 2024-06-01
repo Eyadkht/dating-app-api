@@ -34,7 +34,7 @@ This project is a simple dating API service built using Go. It allows users to c
 
 * In a production environment, accurate user location data would need to be obtained through other means and sent by the frontend client
 
-### Location Data
+### Date of Birth / Age
 
 * I was unsure weather I should collect the date of birth and return the calculated age in the response, as the requirement states that the /user/create endpoint should return the "date of birth" field, but the expected response shows the "age" field instead.
 
