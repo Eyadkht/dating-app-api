@@ -39,7 +39,7 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&swipePayload)
 	if err != nil {
-		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusBadRequest, "Payload is not valid"))
+		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusBadRequest, fmt.Sprintf("Error decoding request body: %v", err)))
 		return
 	}
 
@@ -62,14 +62,21 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 		TargetID:  swipePayload.TargetID,
 		SwipeType: swipePayload.SwipeType,
 	}
+	createSwipeErr := core.GetDb().Create(&swipe)
+	if createSwipeErr.Error != nil {
+		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusInternalServerError, "Error creating swipe record"))
+		return
+	}
 
-	core.GetDb().Create(&swipe)
+	// Update the Target user attractiveness score
+	// Using Goroutines to run the function in the background as it's not critical to the response
+	go func(targetUser models.User, swipeType string) {
+		if err := updateTargetUserAttractivenessScore(targetUser, swipeType); err != nil {
+			fmt.Printf("Error updating target user Attractiveness score: %v\n", err)
+		}
+	}(targetUser, swipe.SwipeType)
+
 	if swipe.SwipeType == "YES" {
-
-		// Increase the Target User Total Likes
-		targetUser.TotalLikesReceived++
-		targetUser.AttractivenessScore = calculateAttractivenessScore(targetUser.TotalLikesReceived, targetUser.TotalDislikesReceived)
-
 		// Save the changes to the target user
 		core.GetDb().Save(&targetUser)
 
@@ -87,19 +94,39 @@ func UserSwipe(w http.ResponseWriter, r *http.Request) {
 			utils.WriteSuccessResponse(w, http.StatusOK, userSwipeMatchedResonse)
 			return
 		}
-	} else {
-		// Increase the Target User Total Dislikes
-		targetUser.TotalDislikesReceived++
-		targetUser.AttractivenessScore = calculateAttractivenessScore(targetUser.TotalLikesReceived, targetUser.TotalDislikesReceived)
-		// Save the changes to the target user
-		core.GetDb().Save(&targetUser)
 	}
 
+	// The swiper selected NO so there's no need to check for a match with the target user
 	createdUserResponse := UserSwipeNotMatchedResonse{Matched: false}
 	utils.WriteSuccessResponse(w, http.StatusOK, createdUserResponse)
 }
 
-func calculateAttractivenessScore(likes, dislikes int) float64 {
+func updateTargetUserAttractivenessScore(targetUser models.User, swipeType string) error {
+
+	// Update the target user attractiveness score based on a simple formula
+	// Attractiveness Score = Total Likes / (Total Likes + Total Dislikes)
+	// The more likes the user gets, the higher the score
+	// This is a simple example and can be improved with more complex algorithms
+	fmt.Println("Updating target user attractiveness score")
+	if swipeType == "YES" {
+		targetUser.TotalLikesReceived++
+		targetUser.AttractivenessScore = calculateAttractivenessScore(targetUser.TotalLikesReceived, targetUser.TotalDislikesReceived)
+	} else if swipeType == "NO" {
+		targetUser.TotalDislikesReceived++
+		targetUser.AttractivenessScore = calculateAttractivenessScore(targetUser.TotalLikesReceived, targetUser.TotalDislikesReceived)
+	}
+
+	// Save the changes to the target user
+	err := core.GetDb().Save(&targetUser)
+	if err != nil {
+		return err.Error
+	}
+
+	return nil
+}
+
+func calculateAttractivenessScore(likes int, dislikes int) float64 {
+
 	totalSwipes := likes + dislikes
 	if totalSwipes == 0 {
 		return 0.0
