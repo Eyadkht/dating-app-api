@@ -140,7 +140,7 @@ The application exposes the following core endpoints:
 
     This endpoint allows an authenticated user to swipe (YES or NO) on another user's profile and handles the matching logic
 
-Detailed documentation for each endpoint, including request/response formats, and headers, can be found in the API Documentation section below.
+Detailed documentation for each endpoint, including request/response formats, and headers, can be found in the [API Documentation](#api-documentation) section below.
 
 ## Project Structure
 
