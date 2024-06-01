@@ -18,7 +18,8 @@ func InitDb() {
 		AppConfig.MYSQL_PASSWORD,
 		AppConfig.MYSQL_HOST,
 		AppConfig.MYSQL_PORT,
-		AppConfig.MYSQL_DATABASE)
+		AppConfig.MYSQL_DATABASE,
+	)
 	database, database_error := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	db = database

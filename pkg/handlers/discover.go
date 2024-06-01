@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -26,20 +25,11 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Retrieve user from context
-	contextUser, ok := r.Context().Value(core.UserContextKey).(models.User)
-	if !ok {
-		// Handle the case where user is not found in context (unexpected)
-		w.WriteHeader(http.StatusInternalServerError)
-		error_response := map[string]string{"error": "Error: User not found in context"}
-		json.NewEncoder(w).Encode(error_response)
-		return
-	}
+	// The AuthMiddleware is handling cases related to not finding the user
+	contextUser, _ := r.Context().Value(core.UserContextKey).(models.User)
 
 	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		fmt.Fprintf(w, "Method not allowed: %s", r.Method)
-		error_response := map[string]string{"error": fmt.Sprintf("Method not allowed: %s", r.Method)}
-		json.NewEncoder(w).Encode(error_response)
+		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusMethodNotAllowed, fmt.Sprintf("Method not allowed: %s", r.Method)))
 		return
 	}
 
@@ -73,6 +63,10 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 
 	// Execute the query
 	result := query.Find(&users)
+	if err := result.Error; err != nil {
+		utils.WriteErrorResponse(w, utils.NewAppError(http.StatusBadRequest, "Error fetching users"))
+		return
+	}
 
 	// Convert User slices to PotentialMatchesResponse slices
 	// Used as a data transfer object to omit Token and Password fields
@@ -98,27 +92,13 @@ func GetPotentialMatches(w http.ResponseWriter, r *http.Request) {
 		return potentialMatches[i].AttractivenessScore > potentialMatches[j].AttractivenessScore
 	})
 
-	if err := result.Error; err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		error_response := map[string]string{"error": "Error fetching users"}
-		json.NewEncoder(w).Encode(error_response)
-		return
-	}
-
-	encoder := json.NewEncoder(w)
-
 	// Create a response object with a "results" key
 	response := struct {
 		Results []PotentialMatchesResponse `json:"results"`
 	}{
 		Results: potentialMatches,
 	}
-	if err := encoder.Encode(response); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		error_response := map[string]string{"error": fmt.Sprintf("Error serializing users to JSON: %v", err)}
-		json.NewEncoder(w).Encode(error_response)
-		return
-	}
+	utils.WriteSuccessResponse(w, http.StatusOK, response)
 }
 
 func getSwipedUserIDs(userID uint64) []uint64 {
