@@ -501,6 +501,17 @@ curl -X POST \
 }
 ```
 
+#### **400 Bad Request** - Match already exists
+
+```json
+{
+    "error": {
+        "statusCode": 400,
+        "message": "Match already exists"
+    }
+}
+```
+
 #### **401 Unauthorized** - Missing or invalid authentication token or header
 
 ```json
