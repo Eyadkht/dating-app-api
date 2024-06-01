@@ -34,6 +34,12 @@ This project is a simple dating API service built using Go. It allows users to c
 
 * In a production environment, accurate user location data would need to be obtained through other means and sent by the frontend client
 
+### Location Data
+
+* I was unsure weather I should collect the date of birth and return the calculated age in the response, as the requirement states that the /user/create endpoint should return the "date of birth" field, but the expected response shows the "age" field instead.
+
+* I made the decision that it would be simpler to collect the user's age during account creation instead of calculating it from the date of birth. However, it's important to note that this approach is not a recommended and should be avoided in favor of using the date of birth for accurate age calculations.
+
 ### Data Storage
 
 * For this project, a SQL database (MySQL) was chosen for its simplicity. While the current database design might not be optimal for scaling to millions of users, it serves the purpose of this demo application and provides the required functionality
@@ -182,7 +188,7 @@ Creates a new user account. User's location data is generated randomly from the 
 | password (required) | string  | User's password    |
 | name     (required) | string  | User's name        |
 | gender   (required) | string  | User's gender (Male, Female)     |
-| dateOfBirth      (required) | string     | User's date of birth         |
+| age      (required) | string     | User's age     |
 
 ### Example
 
@@ -195,7 +201,7 @@ curl -X POST \
         "password": "password123",
         "name": "John Doe",
         "gender": "male",
-        "dateOfBirth": "1990-01-01"
+        "age": 25
     }'
 ```
 
