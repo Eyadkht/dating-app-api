@@ -329,7 +329,7 @@ curl -X POST \
 
 ### Endpoint
 
-POST /discover
+GET /discover
 
 ### Description
 
