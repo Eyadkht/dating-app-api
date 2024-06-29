@@ -1,4 +1,4 @@
-# Muzz | Technical Test
+# Simple Dating App API
 
 ## Table of Contents
 
@@ -95,19 +95,19 @@ Before running this application, please ensure you have the following installed:
 
     HTTPS
     ```bash
-    git clone https://github.com/Eyadkht/muzz-dating.git
+    git clone https://github.com/Eyadkht/dating-app-api.git
     ```
 
     or SSH
     
     ```bash
-    git clone git@github.com:Eyadkht/muzz-dating.git
+    git clone git@github.com:Eyadkht/dating-app-api.git
     ```
 
 2. Navigate to the project directory:
 
     ```bash
-    cd muzz-dating
+    cd dating-app-api
     ```
 
 3. Run the Docker script to build and start the containers:
