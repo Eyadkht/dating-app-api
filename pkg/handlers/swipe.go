@@ -6,9 +6,9 @@ import (
 	"math"
 	"net/http"
 
-	"muzz-dating/pkg/core"
-	"muzz-dating/pkg/models"
-	"muzz-dating/pkg/utils"
+	"dating-app/pkg/core"
+	"dating-app/pkg/models"
+	"dating-app/pkg/utils"
 )
 
 type UserSwipeMatchedResonse struct {

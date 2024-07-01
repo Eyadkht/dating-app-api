@@ -26,9 +26,9 @@ func LoadConfig() {
 
 	AppConfig = Config{
 		ENVIRONMENT:    getEnv("ENVIRONMENT", "development"),
-		MYSQL_USER:     getEnv("MYSQL_USER", "muzz_db_user"),
-		MYSQL_PASSWORD: getEnv("MYSQL_PASSWORD", "muzz_db_password"),
-		MYSQL_DATABASE: getEnv("MYSQL_DATABASE", "muzz_dating_db"),
+		MYSQL_USER:     getEnv("MYSQL_USER", "dating_db_user"),
+		MYSQL_PASSWORD: getEnv("MYSQL_PASSWORD", "dating_db_password"),
+		MYSQL_DATABASE: getEnv("MYSQL_DATABASE", "dating_dating_db"),
 		MYSQL_HOST:     getEnv("MYSQL_HOST", "db"),
 		MYSQL_PORT:     getEnv("MYSQL_PORT", "3306"),
 	}

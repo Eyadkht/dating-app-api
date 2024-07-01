@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"muzz-dating/pkg/handlers"
+	"dating-app/pkg/handlers"
 	"net/http"
 )
 

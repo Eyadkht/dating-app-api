@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"sort"
 
-	"muzz-dating/pkg/core"
-	"muzz-dating/pkg/models"
-	"muzz-dating/pkg/utils"
+	"dating-app/pkg/core"
+	"dating-app/pkg/models"
+	"dating-app/pkg/utils"
 )
 
 type PotentialMatchesResponse struct {

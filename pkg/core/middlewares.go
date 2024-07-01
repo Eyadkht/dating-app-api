@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"muzz-dating/pkg/models"
-	"muzz-dating/pkg/utils"
+	"dating-app/pkg/models"
+	"dating-app/pkg/utils"
 
 	"gorm.io/gorm"
 )

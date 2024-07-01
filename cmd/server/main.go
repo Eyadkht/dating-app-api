@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"muzz-dating/pkg/core"
-	"muzz-dating/pkg/routes"
+	"dating-app/pkg/core"
+	"dating-app/pkg/routes"
 )
 
 func main() {

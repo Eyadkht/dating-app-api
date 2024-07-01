@@ -1,4 +1,4 @@
-module muzz-dating
+module dating-app
 
 go 1.22.3
 

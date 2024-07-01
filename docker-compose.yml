@@ -4,18 +4,18 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: secret_password
-      MYSQL_USER: muzz_db_user
-      MYSQL_PASSWORD: muzz_db_password
-      MYSQL_DATABASE: muzz_dating_db
+      MYSQL_USER: dating_db_user
+      MYSQL_PASSWORD: dating_db_password
+      MYSQL_DATABASE: dating_dating_db
     volumes:
       - db_data:/var/lib/mysql # Persist database data
   api:
     build:
       context: .
     environment:
-      MYSQL_USER: muzz_db_user
-      MYSQL_PASSWORD: muzz_db_password
-      MYSQL_DATABASE: muzz_dating_db
+      MYSQL_USER: dating_db_user
+      MYSQL_PASSWORD: dating_db_password
+      MYSQL_DATABASE: dating_dating_db
     ports:
       - "8888:8888"
     depends_on:

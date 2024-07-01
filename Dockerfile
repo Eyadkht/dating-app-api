@@ -14,17 +14,17 @@ RUN go mod download
 COPY . .
 
 # Build the binary.
-RUN CGO_ENABLED=0 go build -o muzz-dating ./cmd/server
+RUN CGO_ENABLED=0 go build -o dating-app ./cmd/server
 
 FROM alpine:latest
 
 WORKDIR /app
 
 # Copy the Go binary from the builder stage
-COPY --from=builder /app/muzz-dating .
+COPY --from=builder /app/dating-app .
 
 # The TCP port the application is going to listen on by default.
 EXPOSE 8888
 
 # Run
-CMD ["./muzz-dating"]
+CMD ["./dating-app"]

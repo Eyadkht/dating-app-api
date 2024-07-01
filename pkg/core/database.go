@@ -1,9 +1,9 @@
 package core
 
 import (
+	"dating-app/pkg/models"
 	"fmt"
 	"log"
-	"muzz-dating/pkg/models"
 	"time"
 
 	"gorm.io/driver/mysql"

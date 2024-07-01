@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"muzz-dating/pkg/core"
-	"muzz-dating/pkg/models"
-	"muzz-dating/pkg/utils"
+	"dating-app/pkg/core"
+	"dating-app/pkg/models"
+	"dating-app/pkg/utils"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
